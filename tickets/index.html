@@ -664,7 +664,7 @@
         mostrarAlerta('No hay datos para exportar.');
         return;
       }
-      let csvContent = "data:text/csv;charset=utf-8,Folio,Fecha,Responsable,Estatus,Descripcion,Notas\n";
+      let csvContent = "data:text/csv;charset=utf-8,Ticket,Fecha,Responsable,Estatus,Descripcion,Notas\n";
       ticketsData.forEach(t => {
         const row = [t.folio, t.fecha, t.responsable, t.estatus, `"${(t.falla || '').replace(/"/g, '""')}"`, `"${(t.notas || '').replace(/"/g, '""')}"`];
         csvContent += row.join(",") + "\n";
