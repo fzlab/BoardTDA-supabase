@@ -68,7 +68,7 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <!-- Widget de reloj (Sin modificar) -->
+            <!-- Widget de reloj -->
             <div class="flex flex-col items-end px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 text-right">
                 <span id="liveClock" class="text-xs font-mono font-semibold text-teal-700 dark:text-teal-300">00:00:00</span>
                 <span id="liveDate" class="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">--,--</span>
@@ -85,22 +85,58 @@
     <!-- Contenido Principal: Módulo de Tickets -->
     <div class="p-3 max-w-7xl mx-auto w-full space-y-4 flex-1 relative z-10">
       
+      <!-- Tarjetas de Métricas (KPIs) -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-2.5 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</p>
+            <h3 id="kpiTotal" class="text-base font-extrabold text-slate-800 dark:text-slate-100">0</h3>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+            <i class="fa-solid fa-layer-group text-xs"></i>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-2.5 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase font-bold text-amber-500 tracking-wider">Pendientes</p>
+            <h3 id="kpiPendientes" class="text-base font-extrabold text-amber-600 dark:text-amber-400">0</h3>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <i class="fa-solid fa-clock text-xs"></i>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-2.5 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">Atendidos</p>
+            <h3 id="kpiAtendidos" class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">0</h3>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <i class="fa-solid fa-check-circle text-xs"></i>
+          </div>
+        </div>
+      </div>
+
       <!-- Barra de Acciones y Filtros -->
       <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 shadow-md space-y-3">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <span id="conexionStatus" class="inline-flex items-center gap-1 text-[11px] text-amber-500"><i class="fa-solid fa-circle-dot"></i> Conectando...</span>
           </div>
-          <button onclick="abrirModalTicket()" class="w-full sm:w-auto py-1.5 px-3 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-500/20 transition-all font-semibold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-plus"></i> Nuevo Ticket
-          </button>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button onclick="exportarExcel()" class="flex-1 sm:flex-none py-1.5 px-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-all font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 cursor-pointer" title="Exportar a CSV/Excel">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i> Exportar
+            </button>
+            <button onclick="abrirModalTicket()" class="flex-1 sm:flex-none py-1.5 px-3 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-500/20 transition-all font-semibold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-plus"></i> Nuevo Ticket
+            </button>
+          </div>
         </div>
 
         <!-- Filtros y Buscador -->
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
           <!-- Buscador por Folio -->
           <div class="relative">
-            <input type="text" id="filtroBuscador" placeholder="Buscar por Folio o Descripción..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
+            <input type="text" id="filtroBuscador" placeholder="Buscar Folio o Falla..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
           </div>
           
           <!-- Filtro por Responsable -->
@@ -108,7 +144,7 @@
             <input type="hidden" id="filtroResponsable" value="" onchange="filtrarTickets()">
             <div class="dropdown relative inline-block w-full">
               <button type="button" id="btn_filtroResponsable" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroResponsable')">
-                <span id="text_filtroResponsable" class="truncate">Todos los responsables</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+                <span id="text_filtroResponsable" class="truncate">Responsable</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
               </button>
               <div id="menu_filtroResponsable" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
             </div>
@@ -119,32 +155,45 @@
             <input type="hidden" id="filtroEstatus" value="" onchange="filtrarTickets()">
             <div class="dropdown relative inline-block w-full">
               <button type="button" id="btn_filtroEstatus" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroEstatus')">
-                <span id="text_filtroEstatus" class="truncate">Todos los estatus</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+                <span id="text_filtroEstatus" class="truncate">Estatus</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
               </button>
               <div id="menu_filtroEstatus" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
             </div>
           </div>
 
-          <!-- Rango de Fechas con Calendario Nativo -->
+          <!-- Filtro por Prioridad -->
+          <div>
+            <input type="hidden" id="filtroPrioridad" value="" onchange="filtrarTickets()">
+            <div class="dropdown relative inline-block w-full">
+              <button type="button" id="btn_filtroPrioridad" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroPrioridad')">
+                <span id="text_filtroPrioridad" class="truncate">Prioridad</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+              </button>
+              <div id="menu_filtroPrioridad" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+            </div>
+          </div>
+
+          <!-- Rango de Fechas -->
           <div class="flex items-center gap-1">
-            <input type="date" id="filtroFechaInicio" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]">
-            <input type="date" id="filtroFechaFin" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]">
+            <input type="date" id="filtroFechaInicio" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]" title="Fecha Inicio">
+            <input type="date" id="filtroFechaFin" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]" title="Fecha Fin">
           </div>
         </div>
       </div>
 
-      <!-- Tabla de Tickets -->
+      <!-- Vista de Tickets: Tabla para Escritorio / Tarjetas para Móvil -->
       <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 shadow-md">
-        <div class="overflow-x-auto">
+        <!-- Tabla (Visible en pantallas medianas o mayores) -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="text-[10px] text-slate-500 dark:text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700/60">
                 <th class="py-2 px-2">Folio</th>
-                <th class="py-2 px-2">Fecha de Creación</th>
+                <th class="py-2 px-2">Creación</th>
                 <th class="py-2 px-2">Responsable</th>
                 <th class="py-2 px-2">Descripción</th>
+                <th class="py-2 px-2">Prioridad</th>
                 <th class="py-2 px-2">Estatus</th>
-                <th class="py-2 px-2">Notas</th>
+                <th class="py-2 px-2">Notas / Bitácora</th>
                 <th class="py-2 px-2 text-center">Acciones</th>
               </tr>
             </thead>
@@ -153,6 +202,11 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Tarjetas (Visible en móviles) -->
+        <div id="tarjetasMobileContainer" class="md:hidden space-y-2.5">
+          <!-- Se llena dinámicamente -->
+        </div>
       </div>
 
     </div>
@@ -160,7 +214,7 @@
 
   <!-- Modal Nuevo/Editar Ticket -->
   <div class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4" id="modalTicket" style="display: none;">
-    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
         <h3 id="modalTicketTitulo" class="text-base font-bold text-slate-900 dark:text-slate-100">Registrar Nuevo Ticket</h3>
         <span class="close-modal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-xl font-bold" onclick="cerrarModalTicket()">&times;</span>
@@ -192,6 +246,16 @@
           <input type="text" id="inputFalla" placeholder="Ej. Aire acondicionado gotea" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
         </div>
         <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Prioridad</label>
+          <input type="hidden" id="inputPrioridad" value="Media">
+          <div class="dropdown relative inline-block w-full">
+            <button type="button" id="btn_inputPrioridad" class="w-full h-8 flex items-center justify-between px-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 transition-colors" onclick="toggleDropdown(event, 'menu_inputPrioridad')">
+              <span id="text_inputPrioridad" class="truncate">Media</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+            </button>
+            <div id="menu_inputPrioridad" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+          </div>
+        </div>
+        <div>
           <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Estatus</label>
           <input type="hidden" id="inputEstatus" value="pendiente">
           <div class="dropdown relative inline-block w-full">
@@ -202,15 +266,15 @@
           </div>
         </div>
         <div>
-          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Notas</label>
-          <textarea id="inputNotas" placeholder="Ej. De 2 aires 1 quedó pendiente" rows="2" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none"></textarea>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Notas / Bitácora</label>
+          <textarea id="inputNotas" placeholder="Ej. Se revisó equipo y se solicitó refacción" rows="2" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none"></textarea>
+          <p class="text-[10px] text-slate-400 mt-1">Nuevas notas se registrarán con marca de tiempo automática.</p>
         </div>
       </div>
 
       <div class="mt-4 flex justify-end gap-2">
         <button onclick="cerrarModalTicket()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">Cancelar</button>
-        <button onclick="guardarTicket()" class="px-4 py-2 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-500/20 shadow-md 
-">Guardar Ticket</button>
+        <button onclick="guardarTicket()" class="px-4 py-2 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-500/20 shadow-md">Guardar Ticket</button>
       </div>
     </div>
   </div>
@@ -254,12 +318,11 @@
 
   <script>
     // -------------------------------------------------------------
-    // CONFIGURACIÓN DE SUPABASE (Corregida la inicialización del cliente)
+    // CONFIGURACIÓN DE SUPABASE
     // -------------------------------------------------------------
     const SUPABASE_URL = "https://mifbcyxtafeacwkzqzsq.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_O6EAbkSba1NQPq08k_7bHg_PZ_x4ZU5";
 
-    // Usamos el cliente global provisto por window.supabase
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let ticketsData = [];
 
@@ -297,12 +360,16 @@
 
     // Listas para los menús desplegables estilo custom
     const listaResponsables = ["", "Mantenimiento", "Inventarios", "Sistemas", "CEDIS", "Operaciones" ,"RH"];
-    const listaResponsablesNombres = ["Todos los responsables", "Mantenimiento", "Inventarios", "Sistemas" ,"CEDIS", "Operaciones", "RH"];
+    const listaResponsablesNombres = ["Todos", "Mantenimiento", "Inventarios", "Sistemas" ,"CEDIS", "Operaciones", "RH"];
     
     const listaEstatus = ["", "pendiente", "atendido"];
-    const listaEstatusNombres = ["Todos los estatus", "Pendiente", "Atendido"];
+    const listaEstatusNombres = ["Todos", "Pendiente", "Atendido"];
+
+    const listaPrioridades = ["", "Baja", "Media", "Alta", "Urgente"];
+    const listaPrioridadesNombres = ["Todas", "Baja", "Media", "Alta", "Urgente"];
 
     const listaModalResponsables = ["Mantenimiento", "Inventarios", "Sistemas", "CEDIS", "Operaciones" ,"RH"];
+    const listaModalPrioridades = ["Baja", "Media", "Alta", "Urgente"];
     const listaModalEstatus = ["pendiente", "atendido"];
     const listaModalEstatusNombres = ["Pendiente", "Atendido"];
 
@@ -343,31 +410,37 @@
 
     function populateSelects() {
         // Filtro Responsable
-        const respMenu = document.getElementById('menu_filtroResponsable');
-        respMenu.innerHTML = listaResponsables.map((val, idx) => 
+        document.getElementById('menu_filtroResponsable').innerHTML = listaResponsables.map((val, idx) => 
             `<button type="button" onclick="seleccionarOpcionDropdown('filtroResponsable', 'text_filtroResponsable', 'menu_filtroResponsable', '${val}', '${listaResponsablesNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaResponsablesNombres[idx]}</button>`
         ).join('');
 
         // Filtro Estatus
-        const estMenu = document.getElementById('menu_filtroEstatus');
-        estMenu.innerHTML = listaEstatus.map((val, idx) => 
+        document.getElementById('menu_filtroEstatus').innerHTML = listaEstatus.map((val, idx) => 
             `<button type="button" onclick="seleccionarOpcionDropdown('filtroEstatus', 'text_filtroEstatus', 'menu_filtroEstatus', '${val}', '${listaEstatusNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaEstatusNombres[idx]}</button>`
         ).join('');
 
+        // Filtro Prioridad
+        document.getElementById('menu_filtroPrioridad').innerHTML = listaPrioridades.map((val, idx) => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('filtroPrioridad', 'text_filtroPrioridad', 'menu_filtroPrioridad', '${val}', '${listaPrioridadesNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaPrioridadesNombres[idx]}</button>`
+        ).join('');
+
         // Modal Responsable
-        const modalRespMenu = document.getElementById('menu_inputResponsable');
-        modalRespMenu.innerHTML = listaModalResponsables.map(val => 
+        document.getElementById('menu_inputResponsable').innerHTML = listaModalResponsables.map(val => 
             `<button type="button" onclick="seleccionarOpcionDropdown('inputResponsable', 'text_inputResponsable', 'menu_inputResponsable', '${val}', '${val}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${val}</button>`
         ).join('');
 
+        // Modal Prioridad
+        document.getElementById('menu_inputPrioridad').innerHTML = listaModalPrioridades.map(val => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('inputPrioridad', 'text_inputPrioridad', 'menu_inputPrioridad', '${val}', '${val}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${val}</button>`
+        ).join('');
+
         // Modal Estatus
-        const modalEstMenu = document.getElementById('menu_inputEstatus');
-        modalEstMenu.innerHTML = listaModalEstatus.map((val, idx) => 
+        document.getElementById('menu_inputEstatus').innerHTML = listaModalEstatus.map((val, idx) => 
             `<button type="button" onclick="seleccionarOpcionDropdown('inputEstatus', 'text_inputEstatus', 'menu_inputEstatus', '${val}', '${listaModalEstatusNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaModalEstatusNombres[idx]}</button>`
         ).join('');
     }
 
-    // Manejo de Modales de Alerta y Confirmación Personalizados
+    // Alerta y Confirmación
     let confirmCallback = null;
 
     function mostrarAlerta(texto) {
@@ -395,7 +468,7 @@
         }
     }
 
-    // Reloj en vivo (Sin modificar formato)
+    // Reloj en vivo
     function initClock() {
         const updateClock = () => {
             const now = new Date();
@@ -418,7 +491,6 @@
       document.getElementById('modalTicket').style.display = 'flex';
       
       if (id !== null) {
-        // Modo Edición
         const ticket = ticketsData.find(t => t.id === id);
         if (ticket) {
           document.getElementById('modalTicketTitulo').innerText = 'Editar Ticket';
@@ -431,13 +503,16 @@
           
           document.getElementById('inputFalla').value = ticket.falla;
           
+          const prioridadVal = ticket.prioridad || 'Media';
+          document.getElementById('inputPrioridad').value = prioridadVal;
+          document.getElementById('text_inputPrioridad').textContent = prioridadVal;
+
           document.getElementById('inputEstatus').value = ticket.estatus;
           document.getElementById('text_inputEstatus').textContent = ticket.estatus === 'atendido' ? 'Atendido' : 'Pendiente';
           
           document.getElementById('inputNotas').value = ticket.notas || '';
         }
       } else {
-        // Modo Nuevo
         document.getElementById('modalTicketTitulo').innerText = 'Registrar Nuevo Ticket';
         document.getElementById('editTicketId').value = '';
         document.getElementById('inputFolio').value = '';
@@ -447,6 +522,9 @@
         document.getElementById('text_inputResponsable').textContent = 'Mantenimiento';
         
         document.getElementById('inputFalla').value = '';
+
+        document.getElementById('inputPrioridad').value = 'Media';
+        document.getElementById('text_inputPrioridad').textContent = 'Media';
         
         document.getElementById('inputEstatus').value = 'pendiente';
         document.getElementById('text_inputEstatus').textContent = 'Pendiente';
@@ -468,25 +546,44 @@
       const fecha = document.getElementById('inputFecha').value;
       const responsable = document.getElementById('inputResponsable').value;
       const falla = document.getElementById('inputFalla').value.trim();
+      const prioridad = document.getElementById('inputPrioridad').value;
       const estatus = document.getElementById('inputEstatus').value;
-      const notas = document.getElementById('inputNotas').value.trim();
+      let notasNuevas = document.getElementById('inputNotas').value.trim();
 
       if (!folio || !falla || !fecha) {
         mostrarAlerta('Por favor completa el folio, la fecha y la descripción.');
         return;
       }
 
-      const payload = { folio, fecha, responsable, falla, estatus, notas };
+      // Bitácora con marca de tiempo si se añade nueva nota
+      if (notasNuevas) {
+        const fechaHoraActual = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+        if (editId) {
+          const ticketAntiguo = ticketsData.find(t => t.id == editId);
+          if (ticketAntiguo && ticketAntiguo.notas) {
+            // Si ya tiene notas anteriores y el texto ingresado no estaba ya incluido, lo concatenamos con marca de tiempo
+            if (!ticketAntiguo.notas.includes(notasNuevas)) {
+              notasNuevas = `${ticketAntiguo.notas}\n[${fechaHoraActual}]: ${notasNuevas}`;
+            } else {
+              notasNuevas = ticketAntiguo.notas;
+            }
+          } else {
+            notasNuevas = `[${fechaHoraActual}]: ${notasNuevas}`;
+          }
+        } else {
+          notasNuevas = `[${fechaHoraActual}]: ${notasNuevas}`;
+        }
+      }
+
+      const payload = { folio, fecha, responsable, falla, prioridad, estatus, notas: notasNuevas };
 
       if (editId) {
-        // Actualizar existente
         const { error } = await supabaseClient.from('tickets').update(payload).eq('id', editId);
         if (error) {
           mostrarAlerta('Error al actualizar el ticket: ' + error.message);
           return;
         }
       } else {
-        // Crear nuevo
         const { error } = await supabaseClient.from('tickets').insert([payload]);
         if (error) {
           mostrarAlerta('Error al guardar el ticket: ' + error.message);
@@ -511,31 +608,92 @@
       });
     }
 
+    function compartirWhatsApp(folio, responsable, falla, estatus, prioridad, notas) {
+      const texto = `*TICKET MINISO T0151 (G.P Mérida)*\n\n📌 *Folio:* ${folio}\n👤 *Responsable:* ${responsable}\n⚠️ *Prioridad:* ${prioridad || 'Media'}\n📋 *Descripción:* ${falla}\n🔄 *Estatus:* ${estatus.toUpperCase()}\n📝 *Notas:* ${notas || 'Ninguna'}`;
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+
+    function exportarExcel() {
+      if (ticketsData.length === 0) {
+        mostrarAlerta('No hay datos para exportar.');
+        return;
+      }
+      let csvContent = "data:text/csv;charset=utf-8,Folio,Fecha,Responsable,Prioridad,Estatus,Descripcion,Notas\n";
+      ticketsData.forEach(t => {
+        const row = [t.folio, t.fecha, t.responsable, t.prioridad || 'Media', t.estatus, `"${(t.falla || '').replace(/"/g, '""')}"`, `"${(t.notas || '').replace(/"/g, '""')}"`];
+        csvContent += row.join(",") + "\n";
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `tickets_miniso_t0151_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function actualizarKPIs(lista) {
+      const total = lista.length;
+      const pendientes = lista.filter(t => t.estatus === 'pendiente').length;
+      const atendidos = lista.filter(t => t.estatus === 'atendido').length;
+
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiPendientes').textContent = pendientes;
+      document.getElementById('kpiAtendidos').textContent = atendidos;
+    }
+
     function renderizarTickets(lista) {
       const tbody = document.getElementById('tablaTicketsBody');
+      const containerMobile = document.getElementById('tarjetasMobileContainer');
+      
       tbody.innerHTML = '';
+      containerMobile.innerHTML = '';
+
+      actualizarKPIs(lista);
 
       if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-500">No se encontraron tickets</td></tr>`;
+        const emptyHTML = `
+          <div class="py-8 text-center space-y-2">
+            <div class="w-12 h-12 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto border border-teal-500/20">
+              <i class="fa-solid fa-inbox text-lg"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">No se encontraron tickets registrados</p>
+          </div>
+        `;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center">${emptyHTML}</td></tr>`;
+        containerMobile.innerHTML = emptyHTML;
         return;
       }
 
       lista.forEach(t => {
-        const tr = document.createElement('tr');
         const badgeEstatus = t.estatus === 'atendido' 
           ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">Atendido</span>'
           : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Pendiente</span>';
 
+        const prio = t.prioridad || 'Media';
+        let badgePrioColor = 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300';
+        if (prio === 'Urgente') badgePrioColor = 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800';
+        else if (prio === 'Alta') badgePrioColor = 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800';
+        else if (prio === 'Media') badgePrioColor = 'bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800';
+
+        const badgePrioridad = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgePrioColor}">${prio}</span>`;
         const fechaFormateada = formatearFechaDDMMYYYY(t.fecha);
 
+        // Fila para Escritorio
+        const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="py-2.5 px-2 font-bold text-teal-600 dark:text-teal-400">${t.folio}</td>
           <td class="py-2.5 px-2">${fechaFormateada}</td>
           <td class="py-2.5 px-2 font-semibold">${t.responsable}</td>
           <td class="py-2.5 px-2">${t.falla}</td>
+          <td class="py-2.5 px-2">${badgePrioridad}</td>
           <td class="py-2.5 px-2">${badgeEstatus}</td>
-          <td class="py-2.5 px-2 text-slate-500 dark:text-slate-400 truncate max-w-[150px]">${t.notas || '-'}</td>
-          <td class="py-2.5 px-2 text-center flex items-center justify-center gap-2">
+          <td class="py-2.5 px-2 text-slate-500 dark:text-slate-400 truncate max-w-[150px]" title="${t.notas || ''}">${t.notas || '-'}</td>
+          <td class="py-2.5 px-2 text-center flex items-center justify-center gap-1">
+            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="p-1 text-emerald-600 hover:text-emerald-800 transition-colors" title="Compartir por WhatsApp">
+              <i class="fa-brands fa-whatsapp"></i>
+            </button>
             <button onclick="abrirModalTicket(${t.id})" class="p-1 text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200 transition-colors" title="Editar ticket">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
@@ -545,6 +703,37 @@
           </td>
         `;
         tbody.appendChild(tr);
+
+        // Tarjeta para Móvil
+        const cardDiv = document.createElement('div');
+        cardDiv.className = "bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 space-y-2 text-xs shadow-sm";
+        cardDiv.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2">
+            <span class="font-bold text-teal-600 dark:text-teal-400 text-sm">${t.folio}</span>
+            <div class="flex items-center gap-1.5">
+              ${badgePrioridad}
+              ${badgeEstatus}
+            </div>
+          </div>
+          <div class="space-y-1">
+            <p class="text-slate-900 dark:text-slate-100 font-semibold"><span class="text-slate-400 font-normal">Falla:</span> ${t.falla}</p>
+            <p class="text-slate-700 dark:text-slate-300"><span class="text-slate-400 font-normal">Responsable:</span> ${t.responsable}</p>
+            <p class="text-slate-700 dark:text-slate-300"><span class="text-slate-400 font-normal">Fecha:</span> ${fechaFormateada}</p>
+            ${t.notas ? `<p class="text-slate-500 dark:text-slate-400 text-[11px] bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-lg whitespace-pre-line"><span class="font-semibold">Bitácora:</span> ${t.notas}</p>` : ''}
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-200 dark:border-slate-700/60">
+            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="py-1 px-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
+            <button onclick="abrirModalTicket(${t.id})" class="py-1 px-2.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+              <i class="fa-solid fa-pen-to-square"></i> Editar
+            </button>
+            <button onclick="eliminarTicket(${t.id})" class="py-1 px-2.5 bg-red-500/10 text-red-600 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+              <i class="fa-solid fa-trash-can"></i> Eliminar
+            </button>
+          </div>
+        `;
+        containerMobile.appendChild(cardDiv);
       });
     }
 
@@ -552,6 +741,7 @@
       const textoBuscador = document.getElementById('filtroBuscador').value.trim().toLowerCase();
       const filtroResp = document.getElementById('filtroResponsable').value;
       const filtroEst = document.getElementById('filtroEstatus').value;
+      const filtroPrio = document.getElementById('filtroPrioridad').value;
       const fechaIni = document.getElementById('filtroFechaInicio').value;
       const fechaFin = document.getElementById('filtroFechaFin').value;
 
@@ -559,6 +749,7 @@
 
       if (filtroResp) query = query.eq('responsable', filtroResp);
       if (filtroEst) query = query.eq('estatus', filtroEst);
+      if (filtroPrio) query = query.eq('prioridad', filtroPrio);
       if (fechaIni) query = query.gte('fecha', fechaIni);
       if (fechaFin) query = query.lte('fecha', fechaFin);
 
@@ -576,17 +767,16 @@
 
       if (statusEl) {
         statusEl.className = "inline-flex items-center gap-1 text-[11px] text-emerald-500";
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i>Base de Datos: En Línea`;
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Base de Datos: En Línea`;
       }
 
       ticketsData = data || [];
 
-      // Filtro de texto local para folios o descripción
       let filtrados = ticketsData;
       if (textoBuscador) {
         filtrados = ticketsData.filter(t => 
           (t.folio && t.folio.toLowerCase().includes(textoBuscador)) || 
-          (t.falla && t.falla.toLowerCase().includes(textoBuscador))
+          (t.falla && t.falla.toLowerCase().includes(textoBussador || textoBuscador))
         );
       }
 
