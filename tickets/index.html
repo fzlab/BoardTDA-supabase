@@ -133,7 +133,7 @@
         </div>
 
         <!-- Filtros y Buscador -->
-        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
           <!-- Buscador por Folio -->
           <div class="relative">
             <input type="text" id="filtroBuscador" placeholder="Buscar Folio o Falla..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
@@ -161,17 +161,6 @@
             </div>
           </div>
 
-          <!-- Filtro por Prioridad -->
-          <div>
-            <input type="hidden" id="filtroPrioridad" value="" onchange="filtrarTickets()">
-            <div class="dropdown relative inline-block w-full">
-              <button type="button" id="btn_filtroPrioridad" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroPrioridad')">
-                <span id="text_filtroPrioridad" class="truncate">Prioridad</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
-              </button>
-              <div id="menu_filtroPrioridad" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
-            </div>
-          </div>
-
           <!-- Rango de Fechas -->
           <div class="flex items-center gap-1">
             <input type="date" id="filtroFechaInicio" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]" title="Fecha Inicio">
@@ -191,7 +180,6 @@
                 <th class="py-2 px-2">Creación</th>
                 <th class="py-2 px-2">Responsable</th>
                 <th class="py-2 px-2">Descripción</th>
-                <th class="py-2 px-2">Prioridad</th>
                 <th class="py-2 px-2">Estatus</th>
                 <th class="py-2 px-2">Notas / Bitácora</th>
                 <th class="py-2 px-2 text-center">Acciones</th>
@@ -244,16 +232,6 @@
         <div>
           <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Descripción</label>
           <input type="text" id="inputFalla" placeholder="Ej. Aire acondicionado gotea" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
-        </div>
-        <div>
-          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Prioridad</label>
-          <input type="hidden" id="inputPrioridad" value="Media">
-          <div class="dropdown relative inline-block w-full">
-            <button type="button" id="btn_inputPrioridad" class="w-full h-8 flex items-center justify-between px-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 transition-colors" onclick="toggleDropdown(event, 'menu_inputPrioridad')">
-              <span id="text_inputPrioridad" class="truncate">Media</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
-            </button>
-            <div id="menu_inputPrioridad" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
-          </div>
         </div>
         <div>
           <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Estatus</label>
@@ -365,11 +343,7 @@
     const listaEstatus = ["", "pendiente", "atendido"];
     const listaEstatusNombres = ["Todos", "Pendiente", "Atendido"];
 
-    const listaPrioridades = ["", "Baja", "Media", "Alta", "Urgente"];
-    const listaPrioridadesNombres = ["Todas", "Baja", "Media", "Alta", "Urgente"];
-
     const listaModalResponsables = ["Mantenimiento", "Inventarios", "Sistemas", "CEDIS", "Operaciones" ,"RH"];
-    const listaModalPrioridades = ["Baja", "Media", "Alta", "Urgente"];
     const listaModalEstatus = ["pendiente", "atendido"];
     const listaModalEstatusNombres = ["Pendiente", "Atendido"];
 
@@ -419,19 +393,9 @@
             `<button type="button" onclick="seleccionarOpcionDropdown('filtroEstatus', 'text_filtroEstatus', 'menu_filtroEstatus', '${val}', '${listaEstatusNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaEstatusNombres[idx]}</button>`
         ).join('');
 
-        // Filtro Prioridad
-        document.getElementById('menu_filtroPrioridad').innerHTML = listaPrioridades.map((val, idx) => 
-            `<button type="button" onclick="seleccionarOpcionDropdown('filtroPrioridad', 'text_filtroPrioridad', 'menu_filtroPrioridad', '${val}', '${listaPrioridadesNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaPrioridadesNombres[idx]}</button>`
-        ).join('');
-
         // Modal Responsable
         document.getElementById('menu_inputResponsable').innerHTML = listaModalResponsables.map(val => 
             `<button type="button" onclick="seleccionarOpcionDropdown('inputResponsable', 'text_inputResponsable', 'menu_inputResponsable', '${val}', '${val}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${val}</button>`
-        ).join('');
-
-        // Modal Prioridad
-        document.getElementById('menu_inputPrioridad').innerHTML = listaModalPrioridades.map(val => 
-            `<button type="button" onclick="seleccionarOpcionDropdown('inputPrioridad', 'text_inputPrioridad', 'menu_inputPrioridad', '${val}', '${val}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${val}</button>`
         ).join('');
 
         // Modal Estatus
@@ -571,10 +535,6 @@
           document.getElementById('text_inputResponsable').textContent = ticket.responsable;
           
           document.getElementById('inputFalla').value = ticket.falla;
-          
-          const prioridadVal = ticket.prioridad || 'Media';
-          document.getElementById('inputPrioridad').value = prioridadVal;
-          document.getElementById('text_inputPrioridad').textContent = prioridadVal;
 
           document.getElementById('inputEstatus').value = ticket.estatus;
           document.getElementById('text_inputEstatus').textContent = ticket.estatus === 'atendido' ? 'Atendido' : 'Pendiente';
@@ -591,9 +551,6 @@
         document.getElementById('text_inputResponsable').textContent = 'Mantenimiento';
         
         document.getElementById('inputFalla').value = '';
-
-        document.getElementById('inputPrioridad').value = 'Media';
-        document.getElementById('text_inputPrioridad').textContent = 'Media';
         
         document.getElementById('inputEstatus').value = 'pendiente';
         document.getElementById('text_inputEstatus').textContent = 'Pendiente';
@@ -615,7 +572,6 @@
       const fecha = document.getElementById('inputFecha').value;
       const responsable = document.getElementById('inputResponsable').value;
       const falla = document.getElementById('inputFalla').value.trim();
-      const prioridad = document.getElementById('inputPrioridad').value;
       const estatus = document.getElementById('inputEstatus').value;
       let notasNuevas = document.getElementById('inputNotas').value.trim();
 
@@ -638,7 +594,7 @@
         }
       }
 
-      const payload = { folio, fecha, responsable, falla, prioridad, estatus, notas: notasNuevas };
+      const payload = { folio, fecha, responsable, falla, estatus, notas: notasNuevas };
 
       if (!navigator.onLine) {
         if (editId) {
@@ -697,8 +653,8 @@
       });
     }
 
-    function compartirWhatsApp(folio, responsable, falla, estatus, prioridad, notas) {
-      const texto = `*TICKET MINISO T0151 (G.P Mérida)*\n\n📌 *Folio:* ${folio}\n👤 *Responsable:* ${responsable}\n⚠️ *Prioridad:* ${prioridad || 'Media'}\n📋 *Descripción:* ${falla}\n🔄 *Estatus:* ${estatus.toUpperCase()}\n📝 *Notas:* ${notas || 'Ninguna'}`;
+    function compartirWhatsApp(folio, responsable, falla, estatus, notas) {
+      const texto = `*TICKET MINISO T0151 (G.P Mérida)*\n\n📌 *Folio:* ${folio}\n👤 *Responsable:* ${responsable}\n📋 *Descripción:* ${falla}\n🔄 *Estatus:* ${estatus.toUpperCase()}\n📝 *Notas:* ${notas || 'Ninguna'}`;
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
     }
@@ -708,9 +664,9 @@
         mostrarAlerta('No hay datos para exportar.');
         return;
       }
-      let csvContent = "data:text/csv;charset=utf-8,Folio,Fecha,Responsable,Prioridad,Estatus,Descripcion,Notas\n";
+      let csvContent = "data:text/csv;charset=utf-8,Folio,Fecha,Responsable,Estatus,Descripcion,Notas\n";
       ticketsData.forEach(t => {
-        const row = [t.folio, t.fecha, t.responsable, t.prioridad || 'Media', t.estatus, `"${(t.falla || '').replace(/"/g, '""')}"`, `"${(t.notas || '').replace(/"/g, '""')}"`];
+        const row = [t.folio, t.fecha, t.responsable, t.estatus, `"${(t.falla || '').replace(/"/g, '""')}"`, `"${(t.notas || '').replace(/"/g, '""')}"`];
         csvContent += row.join(",") + "\n";
       });
       const encodedUri = encodeURI(csvContent);
@@ -750,7 +706,7 @@
             <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">No se encontraron tickets registrados</p>
           </div>
         `;
-        tbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center">${emptyHTML}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center">${emptyHTML}</td></tr>`;
         containerMobile.innerHTML = emptyHTML;
         return;
       }
@@ -760,13 +716,6 @@
           ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">Atendido</span>'
           : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Pendiente</span>';
 
-        const prio = t.prioridad || 'Media';
-        let badgePrioColor = 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300';
-        if (prio === 'Urgente') badgePrioColor = 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800';
-        else if (prio === 'Alta') badgePrioColor = 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800';
-        else if (prio === 'Media') badgePrioColor = 'bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800';
-
-        const badgePrioridad = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgePrioColor}">${prio}</span>`;
         const fechaFormateada = formatearFechaDDMMYYYY(t.fecha);
 
         // Fila para Escritorio
@@ -776,11 +725,10 @@
           <td class="py-2.5 px-2">${fechaFormateada}</td>
           <td class="py-2.5 px-2 font-semibold">${t.responsable}</td>
           <td class="py-2.5 px-2">${t.falla}</td>
-          <td class="py-2.5 px-2">${badgePrioridad}</td>
           <td class="py-2.5 px-2">${badgeEstatus}</td>
           <td class="py-2.5 px-2 text-slate-500 dark:text-slate-400 truncate max-w-[150px]" title="${t.notas || ''}">${t.notas || '-'}</td>
           <td class="py-2.5 px-2 text-center flex items-center justify-center gap-1">
-            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="p-1 text-emerald-600 hover:text-emerald-800 transition-colors" title="Compartir por WhatsApp">
+            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="p-1 text-emerald-600 hover:text-emerald-800 transition-colors" title="Compartir por WhatsApp">
               <i class="fa-brands fa-whatsapp"></i>
             </button>
             <button onclick="abrirModalTicket('${t.id}')" class="p-1 text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200 transition-colors" title="Editar ticket">
@@ -799,8 +747,7 @@
         cardDiv.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2">
             <span class="font-bold text-teal-600 dark:text-teal-400 text-sm">${t.folio}</span>
-            <div class="flex items-center gap-1.5">
-              ${badgePrioridad}
+            <div>
               ${badgeEstatus}
             </div>
           </div>
@@ -811,7 +758,7 @@
             ${t.notas ? `<p class="text-slate-500 dark:text-slate-400 text-[11px] bg-slate-200/50 dark:bg-slate-800 p-1.5 rounded-lg whitespace-pre-line"><span class="font-semibold">Bitácora:</span> ${t.notas}</p>` : ''}
           </div>
           <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-200 dark:border-slate-700/60">
-            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="py-1 px-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+            <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="py-1 px-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
               <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </button>
             <button onclick="abrirModalTicket('${t.id}')" class="py-1 px-2.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
@@ -830,7 +777,6 @@
       const textoBuscador = document.getElementById('filtroBuscador').value.trim().toLowerCase();
       const filtroResp = document.getElementById('filtroResponsable').value;
       const filtroEst = document.getElementById('filtroEstatus').value;
-      const filtroPrio = document.getElementById('filtroPrioridad').value;
       const fechaIni = document.getElementById('filtroFechaInicio').value;
       const fechaFin = document.getElementById('filtroFechaFin').value;
 
@@ -844,7 +790,6 @@
         let filtrados = ticketsData;
         if (filtroResp) filtrados = filtrados.filter(t => t.responsable === filtroResp);
         if (filtroEst) filtrados = filtrados.filter(t => t.estatus === filtroEst);
-        if (filtroPrio) filtrados = filtrados.filter(t => t.prioridad === filtroPrio);
         if (fechaIni) filtrados = filtrados.filter(t => t.fecha >= fechaIni);
         if (fechaFin) filtrados = filtrados.filter(t => t.fecha <= fechaFin);
         if (textoBuscador) {
@@ -861,7 +806,6 @@
 
       if (filtroResp) query = query.eq('responsable', filtroResp);
       if (filtroEst) query = query.eq('estatus', filtroEst);
-      if (filtroPrio) query = query.eq('prioridad', filtroPrio);
       if (fechaIni) query = query.gte('fecha', fechaIni);
       if (fechaFin) query = query.lte('fecha', fechaFin);
 
