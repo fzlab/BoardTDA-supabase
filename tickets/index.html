@@ -179,10 +179,10 @@
         </div>
         <div>
           <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Responsable</label>
-          <input type="hidden" id="inputResponsable" value="Mtto">
+          <input type="hidden" id="inputResponsable" value="Mantenimiento">
           <div class="dropdown relative inline-block w-full">
             <button type="button" id="btn_inputResponsable" class="w-full h-8 flex items-center justify-between px-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 transition-colors" onclick="toggleDropdown(event, 'menu_inputResponsable')">
-              <span id="text_inputResponsable" class="truncate">Mtto</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+              <span id="text_inputResponsable" class="truncate">Mantenimiento</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
             </button>
             <div id="menu_inputResponsable" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
           </div>
@@ -295,13 +295,13 @@
     lucide.createIcons();
 
     // Listas para los menús desplegables estilo custom
-    const listaResponsables = ["", "Mtto", "Sistemas", "Gerencia", "Limpieza"];
-    const listaResponsablesNombres = ["Todos los responsables", "Mtto", "Sistemas", "Gerencia", "Limpieza"];
+    const listaResponsables = ["", "Mantenimiento", "Inventarios", "Sistemas", "CEDIS", "Operaciones" ,"RH"];
+    const listaResponsablesNombres = ["Todos los responsables", "Mantenimiento", "Inventarios", "Sistemas" ,"CEDIS", "Operaciones", "RH"];
     
     const listaEstatus = ["", "pendiente", "atendido"];
     const listaEstatusNombres = ["Todos los estatus", "Pendiente", "Atendido"];
 
-    const listaModalResponsables = ["Mtto", "Sistemas", "Gerencia", "Limpieza"];
+    const listaModalResponsables = ["Mantenimiento", "Inventarios", "Sistemas", "CEDIS", "Operaciones" ,"RH"];
     const listaModalEstatus = ["pendiente", "atendido"];
     const listaModalEstatusNombres = ["Pendiente", "Atendido"];
 
@@ -442,8 +442,8 @@
         document.getElementById('inputFolio').value = '';
         document.getElementById('inputFecha').value = new Date().toISOString().slice(0, 10);
         
-        document.getElementById('inputResponsable').value = 'Mtto';
-        document.getElementById('text_inputResponsable').textContent = 'Mtto';
+        document.getElementById('inputResponsable').value = 'Mantenimiento';
+        document.getElementById('text_inputResponsable').textContent = 'Mantenimiento';
         
         document.getElementById('inputFalla').value = '';
         
