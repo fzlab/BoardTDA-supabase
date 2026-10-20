@@ -654,7 +654,7 @@
     }
 
     function compartirWhatsApp(folio, responsable, falla, estatus, notas) {
-      const texto = `*TICKET MINISO T0151 (G.P Mérida)*\n\n📌 *Folio:* ${folio}\n👤 *Responsable:* ${responsable}\n📋 *Descripción:* ${falla}\n🔄 *Estatus:* ${estatus.toUpperCase()}\n📝 *Notas:* ${notas || 'Ninguna'}`;
+      const texto = `*TICKET MINISO T0151 (G.P Mérida)*\n\n📌 *Ticket:* ${folio}\n👤 *Responsable:* ${responsable}\n📋 *Descripción:* ${falla}\n🔄 *Estatus:* ${estatus.toUpperCase()}\n📝 *Notas:* ${notas || 'Ninguna'}`;
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
     }
