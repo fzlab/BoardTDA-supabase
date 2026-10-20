@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Control de Tickets - T0151 Gran Plaza Mérida</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- SDK de Supabase v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+      tailwind.config = {
+          darkMode: 'class',
+          theme: {
+              extend: {
+                  colors: {
+                      brand: {
+                          50: '#f0fdf4',
+                          100: '#dcfce7',
+                          500: '#22c55e',
+                          600: '#16a34a',
+                          700: '#15803d',
+                          accent: '#0d9488'
+                      }
+                  }
+              }
+          }
+      }
+  </script>
+  <style>
+      html, body {
+          overscroll-behavior-y: contain;
+      }
+      -webkit-tap-highlight-color: transparent;
+      body { user-select: none; -webkit-user-select: none; }
+      input, select, textarea { user-select: text; -webkit-user-select: text; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+      .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+      /* Transiciones suaves */
+      body, .card, .topbar, .controls-bar, input, select, button {
+          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      }
+  </style>
+</head>
+<body class="h-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans overflow-hidden antialiased">
+
+  <div class="main-content flex-1 flex flex-col overflow-y-auto">
+    
+    <!-- Topbar -->
+    <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/60 px-3 py-2 flex items-center justify-between shrink-0 z-50">
+        <div class="flex items-center space-x-2.5">
+            <div class="p-1.5 bg-teal-500/10 rounded-xl border border-teal-500/20 text-teal-600 shadow-md dark:text-teal-400">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base leading-tight text-slate-900 dark:text-slate-100">Control de Tickets</h1>
+                <p class="text-[11px] text-teal-600 dark:text-teal-400 flex items-center gap-1 font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal-500 dark:bg-teal-400 inline-block"></span> T0151 - Gran Plaza Mérida
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Widget de reloj (Sin modificar) -->
+            <div class="flex flex-col items-end px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 text-right">
+                <span id="liveClock" class="text-xs font-mono font-semibold text-teal-700 dark:text-teal-300">00:00:00</span>
+                <span id="liveDate" class="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">--,--</span>
+            </div>
+
+            <!-- Dark / Light Toggle -->
+            <button id="btn-theme-toggle" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" title="Cambiar modo">
+                <i id="theme-icon" data-lucide="moon" class="w-3.5 h-3.5 dark-icon"></i>
+                <i data-lucide="sun" class="w-3.5 h-3.5 light-icon hidden"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenido Principal: Módulo de Tickets -->
+    <div class="p-3 max-w-7xl mx-auto w-full space-y-4 flex-1 relative z-10">
+      
+      <!-- Barra de Acciones y Filtros -->
+      <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 shadow-md space-y-3">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+            <span id="conexionStatus" class="inline-flex items-center gap-1 text-[11px] text-amber-500"><i class="fa-solid fa-circle-dot"></i> Conectando...</span>
+          </div>
+          <button onclick="abrirModalTicket()" class="w-full sm:w-auto py-1.5 px-3 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-500/20 transition-all font-semibold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-plus"></i> Nuevo Ticket
+          </button>
+        </div>
+
+        <!-- Filtros y Buscador -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
+          <!-- Buscador por Folio -->
+          <div class="relative">
+            <input type="text" id="filtroBuscador" placeholder="Buscar por Folio o Falla..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
+          </div>
+          
+          <!-- Filtro por Responsable -->
+          <div>
+            <input type="hidden" id="filtroResponsable" value="" onchange="filtrarTickets()">
+            <div class="dropdown relative inline-block w-full">
+              <button type="button" id="btn_filtroResponsable" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroResponsable')">
+                <span id="text_filtroResponsable" class="truncate">Todos los responsables</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+              </button>
+              <div id="menu_filtroResponsable" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+            </div>
+          </div>
+
+          <!-- Filtro por Estatus -->
+          <div>
+            <input type="hidden" id="filtroEstatus" value="" onchange="filtrarTickets()">
+            <div class="dropdown relative inline-block w-full">
+              <button type="button" id="btn_filtroEstatus" class="w-full h-7 flex items-center justify-between px-2 rounded-xl text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors" onclick="toggleDropdown(event, 'menu_filtroEstatus')">
+                <span id="text_filtroEstatus" class="truncate">Todos los estatus</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+              </button>
+              <div id="menu_filtroEstatus" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+            </div>
+          </div>
+
+          <!-- Rango de Fechas con Calendario Nativo -->
+          <div class="flex items-center gap-1">
+            <input type="date" id="filtroFechaInicio" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]">
+            <input type="date" id="filtroFechaFin" onchange="filtrarTickets()" class="w-1/2 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-1.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none text-[10px]">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Tickets -->
+      <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 shadow-md">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="text-[10px] text-slate-500 dark:text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700/60">
+                <th class="py-2 px-2">Folio</th>
+                <th class="py-2 px-2">Fecha</th>
+                <th class="py-2 px-2">Responsable</th>
+                <th class="py-2 px-2">Falla</th>
+                <th class="py-2 px-2">Estatus</th>
+                <th class="py-2 px-2">Notas</th>
+                <th class="py-2 px-2 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaTicketsBody" class="divide-y divide-slate-100 dark:divide-slate-700/40 font-medium text-slate-800 dark:text-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Nuevo/Editar Ticket -->
+  <div class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4" id="modalTicket" style="display: none;">
+    <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+        <h3 id="modalTicketTitulo" class="text-base font-bold text-slate-900 dark:text-slate-100">Registrar Nuevo Ticket</h3>
+        <span class="close-modal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-xl font-bold" onclick="cerrarModalTicket()">&times;</span>
+      </div>
+      
+      <input type="hidden" id="editTicketId">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Folio</label>
+          <input type="text" id="inputFolio" placeholder="Ej. TCK-001" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Fecha de Creación</label>
+          <input type="date" id="inputFecha" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Responsable</label>
+          <input type="hidden" id="inputResponsable" value="Mtto">
+          <div class="dropdown relative inline-block w-full">
+            <button type="button" id="btn_inputResponsable" class="w-full h-8 flex items-center justify-between px-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 transition-colors" onclick="toggleDropdown(event, 'menu_inputResponsable')">
+              <span id="text_inputResponsable" class="truncate">Mtto</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+            </button>
+            <div id="menu_inputResponsable" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+          </div>
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Falla</label>
+          <input type="text" id="inputFalla" placeholder="Ej. Aire acondicionado gotea" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Estatus</label>
+          <input type="hidden" id="inputEstatus" value="pendiente">
+          <div class="dropdown relative inline-block w-full">
+            <button type="button" id="btn_inputEstatus" class="w-full h-8 flex items-center justify-between px-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/50 transition-colors" onclick="toggleDropdown(event, 'menu_inputEstatus')">
+              <span id="text_inputEstatus" class="truncate">Pendiente</span> <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+            </button>
+            <div id="menu_inputEstatus" class="dropdown-content hidden absolute left-0 mt-1 bg-white dark:bg-slate-800 w-full min-w-[140px] shadow-xl border border-slate-200 dark:border-slate-700 rounded-xl z-[9999] py-1 text-left"></div>
+          </div>
+        </div>
+        <div>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Notas</label>
+          <textarea id="inputNotas" placeholder="Ej. De 2 aires 1 quedó pendiente" rows="2" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="cerrarModalTicket()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs">Cancelar</button>
+        <button onclick="guardarTicket()" class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-xl text-xs shadow-md">Guardar Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Alerta Genérico -->
+  <div id="alertModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[10010] flex items-center justify-center p-4 hidden">
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 w-full max-w-sm shadow-2xl text-center space-y-4">
+          <div class="w-10 h-10 bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto">
+              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          </div>
+          <p id="alertModalText" class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed">
+              Mensaje
+          </p>
+          <div class="flex justify-center gap-2">
+              <button onclick="cerrarModalAlerta()" class="py-2 px-4 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30 text-xs shadow-md font-semibold cursor-pointer">
+                  Aceptar
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal de Confirmación Genérico -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[10005] flex items-center justify-center p-4 hidden">
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 w-full max-w-sm shadow-2xl text-center space-y-4">
+          <div class="w-10 h-10 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+              <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <p id="confirmModalText" class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed">
+              ¿Desea continuar?
+          </p>
+          <div class="flex justify-center items-center gap-2 w-full">
+              <button onclick="cerrarModalConfirmacion(false)" class="py-2 px-4 bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl hover:bg-teal-500/20 transition-all font-semibold text-xs shadow-md cursor-pointer shrink-0">
+                  Cancelar
+              </button>
+              <button onclick="cerrarModalConfirmacion(true)" class="py-2 px-4 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500/20 transition-all font-semibold text-xs shadow-md cursor-pointer shrink-0">
+                  Confirmar
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // CONFIGURACIÓN DE SUPABASE (Credenciales provistas)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://mifbcyxtafeacwkzqzsq.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_O6EAbkSba1NQPq08k_7bHg_PZ_x4ZU5";
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let ticketsData = [];
+
+    // Conversor de ISO (aaaa-mm-dd) a dd/mm/aaaa
+    function formatearFechaDDMMYYYY(fechaIso) {
+      if (!fechaIso) return '';
+      const partes = fechaIso.split('-');
+      if (partes.length !== 3) return fechaIso;
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    const htmlElement = document.documentElement;
+
+    function setTheme(isDark) {
+        if (isDark) {
+            htmlElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            htmlElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+        lucide.createIcons();
+    }
+
+    const savedTheme = localStorage.getItem('theme');
+    setTheme(savedTheme !== 'light');
+
+    btnThemeToggle.addEventListener('click', () => {
+        const isDarkActive = htmlElement.classList.contains('dark');
+        setTheme(!isDarkActive);
+    });
+
+    lucide.createIcons();
+
+    // Listas para los menús desplegables estilo custom
+    const listaResponsables = ["", "Mtto", "Sistemas", "Gerencia", "Limpieza"];
+    const listaResponsablesNombres = ["Todos los responsables", "Mtto", "Sistemas", "Gerencia", "Limpieza"];
+    
+    const listaEstatus = ["", "pendiente", "atendido"];
+    const listaEstatusNombres = ["Todos los estatus", "Pendiente", "Atendido"];
+
+    const listaModalResponsables = ["Mtto", "Sistemas", "Gerencia", "Limpieza"];
+    const listaModalEstatus = ["pendiente", "atendido"];
+    const listaModalEstatusNombres = ["Pendiente", "Atendido"];
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.dropdown')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (!openDropdown.classList.contains('hidden')) {
+                    openDropdown.classList.add('hidden');
+                }
+            }
+        }
+    }
+
+    function toggleDropdown(event, dropdownId) {
+        event.stopPropagation();
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            let openDropdown = dropdowns[i];
+            if (openDropdown.id !== dropdownId) {
+                openDropdown.classList.add('hidden');
+            }
+        }
+        document.getElementById(dropdownId).classList.toggle('hidden');
+    }
+
+    function seleccionarOpcionDropdown(inputId, spanId, menuId, valor, labelTexto) {
+        const input = document.getElementById(inputId);
+        const span = document.getElementById(spanId);
+        if (input && span) {
+            input.value = valor;
+            span.textContent = labelTexto;
+            input.dispatchEvent(new Event('change'));
+        }
+        document.getElementById(menuId).classList.add('hidden');
+    }
+
+    function populateSelects() {
+        // Filtro Responsable
+        const respMenu = document.getElementById('menu_filtroResponsable');
+        respMenu.innerHTML = listaResponsables.map((val, idx) => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('filtroResponsable', 'text_filtroResponsable', 'menu_filtroResponsable', '${val}', '${listaResponsablesNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaResponsablesNombres[idx]}</button>`
+        ).join('');
+
+        // Filtro Estatus
+        const estMenu = document.getElementById('menu_filtroEstatus');
+        estMenu.innerHTML = listaEstatus.map((val, idx) => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('filtroEstatus', 'text_filtroEstatus', 'menu_filtroEstatus', '${val}', '${listaEstatusNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaEstatusNombres[idx]}</button>`
+        ).join('');
+
+        // Modal Responsable
+        const modalRespMenu = document.getElementById('menu_inputResponsable');
+        modalRespMenu.innerHTML = listaModalResponsables.map(val => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('inputResponsable', 'text_inputResponsable', 'menu_inputResponsable', '${val}', '${val}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${val}</button>`
+        ).join('');
+
+        // Modal Estatus
+        const modalEstMenu = document.getElementById('menu_inputEstatus');
+        modalEstMenu.innerHTML = listaModalEstatus.map((val, idx) => 
+            `<button type="button" onclick="seleccionarOpcionDropdown('inputEstatus', 'text_inputEstatus', 'menu_inputEstatus', '${val}', '${listaModalEstatusNombres[idx]}')" class="w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60">${listaModalEstatusNombres[idx]}</button>`
+        ).join('');
+    }
+
+    // Manejo de Modales de Alerta y Confirmación Personalizados
+    let confirmCallback = null;
+
+    function mostrarAlerta(texto) {
+        document.getElementById('alertModalText').innerText = texto;
+        document.getElementById('alertModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function cerrarModalAlerta() {
+        document.getElementById('alertModal').classList.add('hidden');
+    }
+
+    function mostrarConfirmacion(texto, callback) {
+        document.getElementById('confirmModalText').innerHTML = texto;
+        document.getElementById('confirmModal').classList.add('hidden'); // previene superposición
+        document.getElementById('confirmModal').classList.remove('hidden');
+        confirmCallback = callback;
+        lucide.createIcons();
+    }
+
+    function cerrarModalConfirmacion(resultado) {
+        document.getElementById('confirmModal').classList.add('hidden');
+        if (confirmCallback) {
+            confirmCallback(resultado);
+            confirmCallback = null;
+        }
+    }
+
+    // Reloj en vivo (Sin modificar formato)
+    function initClock() {
+        const updateClock = () => {
+            const now = new Date();
+            const clockEl = document.getElementById('liveClock');
+            const dateEl = document.getElementById('liveDate');
+            if (clockEl) clockEl.textContent = now.toLocaleTimeString();
+            if (dateEl) dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        };
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    window.onload = async function() {
+      initClock();
+      populateSelects();
+      await filtrarTickets();
+    };
+
+    function abrirModalTicket(id = null) {
+      document.getElementById('modalTicket').style.display = 'flex';
+      
+      if (id !== null) {
+        // Modo Edición
+        const ticket = ticketsData.find(t => t.id === id);
+        if (ticket) {
+          document.getElementById('modalTicketTitulo').innerText = 'Editar Ticket';
+          document.getElementById('editTicketId').value = ticket.id;
+          document.getElementById('inputFolio').value = ticket.folio;
+          document.getElementById('inputFecha').value = ticket.fecha;
+          
+          document.getElementById('inputResponsable').value = ticket.responsable;
+          document.getElementById('text_inputResponsable').textContent = ticket.responsable;
+          
+          document.getElementById('inputFalla').value = ticket.falla;
+          
+          document.getElementById('inputEstatus').value = ticket.estatus;
+          document.getElementById('text_inputEstatus').textContent = ticket.estatus === 'atendido' ? 'Atendido' : 'Pendiente';
+          
+          document.getElementById('inputNotas').value = ticket.notas || '';
+        }
+      } else {
+        // Modo Nuevo
+        document.getElementById('modalTicketTitulo').innerText = 'Registrar Nuevo Ticket';
+        document.getElementById('editTicketId').value = '';
+        document.getElementById('inputFolio').value = '';
+        document.getElementById('inputFecha').value = new Date().toISOString().slice(0, 10);
+        
+        document.getElementById('inputResponsable').value = 'Mtto';
+        document.getElementById('text_inputResponsable').textContent = 'Mtto';
+        
+        document.getElementById('inputFalla').value = '';
+        
+        document.getElementById('inputEstatus').value = 'pendiente';
+        document.getElementById('text_inputEstatus').textContent = 'Pendiente';
+        
+        document.getElementById('inputNotas').value = '';
+      }
+    }
+
+    function cerrarModalTicket() {
+      document.getElementById('modalTicket').style.display = 'none';
+    }
+
+    // -------------------------------------------------------------
+    // OPERACIONES CON SUPABASE (CRUD)
+    // -------------------------------------------------------------
+    async function guardarTicket() {
+      const editId = document.getElementById('editTicketId').value;
+      const folio = document.getElementById('inputFolio').value.trim();
+      const fecha = document.getElementById('inputFecha').value;
+      const responsable = document.getElementById('inputResponsable').value;
+      const falla = document.getElementById('inputFalla').value.trim();
+      const estatus = document.getElementById('inputEstatus').value;
+      const notas = document.getElementById('inputNotas').value.trim();
+
+      if (!folio || !falla || !fecha) {
+        mostrarAlerta('Por favor completa el folio, la fecha y la falla.');
+        return;
+      }
+
+      const payload = { folio, fecha, responsable, falla, estatus, notas };
+
+      if (editId) {
+        // Actualizar existente
+        const { error } = await supabase.from('tickets').update(payload).eq('id', editId);
+        if (error) {
+          mostrarAlerta('Error al actualizar el ticket: ' + error.message);
+          return;
+        }
+      } else {
+        // Crear nuevo
+        const { error } = await supabase.from('tickets').insert([payload]);
+        if (error) {
+          mostrarAlerta('Error al guardar el ticket: ' + error.message);
+          return;
+        }
+      }
+
+      await filtrarTickets();
+      cerrarModalTicket();
+    }
+
+    function eliminarTicket(id) {
+      mostrarConfirmacion('¿Desea eliminar este ticket?<br>Esta acción no se puede deshacer.', async (aceptado) => {
+        if (aceptado) {
+          const { error } = await supabase.from('tickets').delete().eq('id', id);
+          if (error) {
+            mostrarAlerta('Error al eliminar el ticket: ' + error.message);
+          } else {
+            await filtrarTickets();
+          }
+        }
+      });
+    }
+
+    function renderizarTickets(lista) {
+      const tbody = document.getElementById('tablaTicketsBody');
+      tbody.innerHTML = '';
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-500">No se encontraron tickets</td></tr>`;
+        return;
+      }
+
+      lista.forEach(t => {
+        const tr = document.createElement('tr');
+        const badgeEstatus = t.estatus === 'atendido' 
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">Atendido</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Pendiente</span>';
+
+        const fechaFormateada = formatearFechaDDMMYYYY(t.fecha);
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-2 font-bold text-teal-600 dark:text-teal-400">${t.folio}</td>
+          <td class="py-2.5 px-2">${fechaFormateada}</td>
+          <td class="py-2.5 px-2 font-semibold">${t.responsable}</td>
+          <td class="py-2.5 px-2">${t.falla}</td>
+          <td class="py-2.5 px-2">${badgeEstatus}</td>
+          <td class="py-2.5 px-2 text-slate-500 dark:text-slate-400 truncate max-w-[150px]">${t.notas || '-'}</td>
+          <td class="py-2.5 px-2 text-center flex items-center justify-center gap-2">
+            <button onclick="abrirModalTicket(${t.id})" class="p-1 text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200 transition-colors" title="Editar ticket">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button onclick="eliminarTicket(${t.id})" class="p-1 text-red-500 hover:text-red-700 transition-colors" title="Eliminar ticket">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function filtrarTickets() {
+      const textoBuscador = document.getElementById('filtroBuscador').value.trim().toLowerCase();
+      const filtroResp = document.getElementById('filtroResponsable').value;
+      const filtroEst = document.getElementById('filtroEstatus').value;
+      const fechaIni = document.getElementById('filtroFechaInicio').value;
+      const fechaFin = document.getElementById('filtroFechaFin').value;
+
+      let query = supabase.from('tickets').select('*').order('created_at', { ascending: false });
+
+      if (filtroResp) query = query.eq('responsable', filtroResp);
+      if (filtroEst) query = query.eq('estatus', filtroEst);
+      if (fechaIni) query = query.gte('fecha', fechaIni);
+      if (fechaFin) query = query.lte('fecha', fechaFin);
+
+      const { data, error } = await query;
+
+      const statusEl = document.getElementById('conexionStatus');
+      if (error) {
+        console.error("Error al consultar Supabase:", error);
+        if (statusEl) {
+          statusEl.className = "inline-flex items-center gap-1 text-[11px] text-red-500";
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Error de conexión`;
+        }
+        return;
+      }
+
+      if (statusEl) {
+        statusEl.className = "inline-flex items-center gap-1 text-[11px] text-emerald-500";
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Supabase Conectado`;
+      }
+
+      ticketsData = data || [];
+
+      // Filtro de texto local para folios o fallas
+      let filtrados = ticketsData;
+      if (textoBuscador) {
+        filtrados = ticketsData.filter(t => 
+          (t.folio && t.folio.toLowerCase().includes(textoBuscador)) || 
+          (t.falla && t.falla.toLowerCase().includes(textoBuscador))
+        );
+      }
+
+      renderizarTickets(filtrados);
+    }
+  </script>
+</body>
+</html>
