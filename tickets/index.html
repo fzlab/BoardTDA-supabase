@@ -100,7 +100,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
           <!-- Buscador por Folio -->
           <div class="relative">
-            <input type="text" id="filtroBuscador" placeholder="Buscar por Folio o Falla..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
+            <input type="text" id="filtroBuscador" placeholder="Buscar por Folio o Descripción..." oninput="filtrarTickets()" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500">
           </div>
           
           <!-- Filtro por Responsable -->
@@ -140,9 +140,9 @@
             <thead>
               <tr class="text-[10px] text-slate-500 dark:text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700/60">
                 <th class="py-2 px-2">Folio</th>
-                <th class="py-2 px-2">Fecha</th>
+                <th class="py-2 px-2">Fecha de Creación</th>
                 <th class="py-2 px-2">Responsable</th>
-                <th class="py-2 px-2">Falla</th>
+                <th class="py-2 px-2">Descripción</th>
                 <th class="py-2 px-2">Estatus</th>
                 <th class="py-2 px-2">Notas</th>
                 <th class="py-2 px-2 text-center">Acciones</th>
@@ -188,7 +188,7 @@
           </div>
         </div>
         <div>
-          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Falla</label>
+          <label class="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Descripción</label>
           <input type="text" id="inputFalla" placeholder="Ej. Aire acondicionado gotea" class="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
         </div>
         <div>
@@ -471,7 +471,7 @@
       const notas = document.getElementById('inputNotas').value.trim();
 
       if (!folio || !falla || !fecha) {
-        mostrarAlerta('Por favor completa el folio, la fecha y la falla.');
+        mostrarAlerta('Por favor completa el folio, la fecha y la descripción.');
         return;
       }
 
@@ -580,7 +580,7 @@
 
       ticketsData = data || [];
 
-      // Filtro de texto local para folios o fallas
+      // Filtro de texto local para folios o descripción
       let filtrados = ticketsData;
       if (textoBuscador) {
         filtrados = ticketsData.filter(t => 
