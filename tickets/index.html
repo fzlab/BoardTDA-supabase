@@ -481,17 +481,86 @@
         setInterval(updateClock, 1000);
     }
 
+    // -------------------------------------------------------------
+    // MANEJO Y SINCRONIZACIÓN OFFLINE
+    // -------------------------------------------------------------
+    function obtenerColaPendiente() {
+      return JSON.parse(localStorage.getItem('cola_tickets_offline') || '[]');
+    }
+
+    function guardarColaPendiente(cola) {
+      localStorage.setItem('cola_tickets_offline', JSON.stringify(cola));
+    }
+
+    function agregarAColaOffline(accion, ticketData) {
+      const cola = obtenerColaPendiente();
+      cola.push({ idTemp: Date.now(), accion, ticketData });
+      guardarColaPendiente(cola);
+      
+      const statusEl = document.getElementById('conexionStatus');
+      if (statusEl) {
+        statusEl.className = "inline-flex items-center gap-1 text-[11px] text-amber-500 font-bold";
+        statusEl.innerHTML = `<i class="fa-solid fa-wifi"></i> Guardado Local (Offline - ${cola.length} pendientes)`;
+      }
+    }
+
+    async function procesarSincronizacionOffline() {
+      const cola = obtenerColaPendiente();
+      if (cola.length === 0) return;
+
+      const statusEl = document.getElementById('conexionStatus');
+      if (statusEl) {
+        statusEl.className = "inline-flex items-center gap-1 text-[11px] text-teal-500 font-bold animate-pulse";
+        statusEl.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> Sincronizando cambios con BD...`;
+      }
+
+      const colaFallida = [];
+
+      for (const item of cola) {
+        let error = null;
+        if (item.accion === 'CREAR') {
+          const { id, ...dataToInsert } = item.ticketData;
+          const { error: err } = await supabaseClient.from('tickets').insert([dataToInsert]);
+          error = err;
+        } else if (item.accion === 'EDITAR') {
+          const { error: err } = await supabaseClient.from('tickets').update(item.ticketData).eq('id', item.ticketData.id);
+          error = err;
+        } else if (item.accion === 'ELIMINAR') {
+          const { error: err } = await supabaseClient.from('tickets').delete().eq('id', item.ticketData.id);
+          error = err;
+        }
+
+        if (error) {
+          colaFallida.push(item);
+        }
+      }
+
+      guardarColaPendiente(colaFallida);
+
+      if (colaFallida.length === 0) {
+        mostrarAlerta('¡Conexión reestablecida! Todos los cambios locales fueron sincronizados con la Base de Datos.');
+      }
+      await filtrarTickets();
+    }
+
+    window.addEventListener('online', () => {
+      procesarSincronizacionOffline();
+    });
+
     window.onload = async function() {
       initClock();
       populateSelects();
       await filtrarTickets();
+      if (navigator.onLine) {
+        await procesarSincronizacionOffline();
+      }
     };
 
     function abrirModalTicket(id = null) {
       document.getElementById('modalTicket').style.display = 'flex';
       
       if (id !== null) {
-        const ticket = ticketsData.find(t => t.id === id);
+        const ticket = ticketsData.find(t => t.id == id);
         if (ticket) {
           document.getElementById('modalTicketTitulo').innerText = 'Editar Ticket';
           document.getElementById('editTicketId').value = ticket.id;
@@ -538,7 +607,7 @@
     }
 
     // -------------------------------------------------------------
-    // OPERACIONES CON SUPABASE (CRUD)
+    // OPERACIONES CRUD CON SOPORTE ONLINE / OFFLINE
     // -------------------------------------------------------------
     async function guardarTicket() {
       const editId = document.getElementById('editTicketId').value;
@@ -555,19 +624,13 @@
         return;
       }
 
-      // Bitácora con marca de tiempo si se añade nueva nota
       if (notasNuevas) {
         const fechaHoraActual = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
         if (editId) {
           const ticketAntiguo = ticketsData.find(t => t.id == editId);
-          if (ticketAntiguo && ticketAntiguo.notas) {
-            // Si ya tiene notas anteriores y el texto ingresado no estaba ya incluido, lo concatenamos con marca de tiempo
-            if (!ticketAntiguo.notas.includes(notasNuevas)) {
-              notasNuevas = `${ticketAntiguo.notas}\n[${fechaHoraActual}]: ${notasNuevas}`;
-            } else {
-              notasNuevas = ticketAntiguo.notas;
-            }
-          } else {
+          if (ticketAntiguo && ticketAntiguo.notas && !ticketAntiguo.notas.includes(notasNuevas)) {
+            notasNuevas = `${ticketAntiguo.notas}\n[${fechaHoraActual}]: ${notasNuevas}`;
+          } else if (!ticketAntiguo || !ticketAntiguo.notas) {
             notasNuevas = `[${fechaHoraActual}]: ${notasNuevas}`;
           }
         } else {
@@ -577,18 +640,33 @@
 
       const payload = { folio, fecha, responsable, falla, prioridad, estatus, notas: notasNuevas };
 
-      if (editId) {
-        const { error } = await supabaseClient.from('tickets').update(payload).eq('id', editId);
-        if (error) {
-          mostrarAlerta('Error al actualizar el ticket: ' + error.message);
-          return;
+      if (!navigator.onLine) {
+        if (editId) {
+          payload.id = editId;
+          agregarAColaOffline('EDITAR', payload);
+          const idx = ticketsData.findIndex(t => t.id == editId);
+          if (idx !== -1) ticketsData[idx] = { ...ticketsData[idx], ...payload };
+        } else {
+          payload.id = 'temp_' + Date.now();
+          agregarAColaOffline('CREAR', payload);
+          ticketsData.unshift(payload);
         }
-      } else {
-        const { error } = await supabaseClient.from('tickets').insert([payload]);
-        if (error) {
-          mostrarAlerta('Error al guardar el ticket: ' + error.message);
-          return;
+        renderizarTickets(ticketsData);
+        cerrarModalTicket();
+        return;
+      }
+
+      try {
+        if (editId) {
+          const { error } = await supabaseClient.from('tickets').update(payload).eq('id', editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabaseClient.from('tickets').insert([payload]);
+          if (error) throw error;
         }
+      } catch (err) {
+        if (editId) { payload.id = editId; }
+        agregarAColaOffline(editId ? 'EDITAR' : 'CREAR', payload);
       }
 
       await filtrarTickets();
@@ -598,12 +676,23 @@
     function eliminarTicket(id) {
       mostrarConfirmacion('¿Desea eliminar este ticket?<br>Esta acción no se puede deshacer.', async (aceptado) => {
         if (aceptado) {
-          const { error } = await supabaseClient.from('tickets').delete().eq('id', id);
-          if (error) {
-            mostrarAlerta('Error al eliminar el ticket: ' + error.message);
-          } else {
-            await filtrarTickets();
+          if (!navigator.onLine) {
+            agregarAColaOffline('ELIMINAR', { id });
+            ticketsData = ticketsData.filter(t => t.id != id);
+            renderizarTickets(ticketsData);
+            return;
           }
+
+          try {
+            const { error } = await supabaseClient.from('tickets').delete().eq('id', id);
+            if (error) throw error;
+          } catch (err) {
+            agregarAColaOffline('ELIMINAR', { id });
+            ticketsData = ticketsData.filter(t => t.id != id);
+            renderizarTickets(ticketsData);
+          }
+
+          await filtrarTickets();
         }
       });
     }
@@ -694,10 +783,10 @@
             <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="p-1 text-emerald-600 hover:text-emerald-800 transition-colors" title="Compartir por WhatsApp">
               <i class="fa-brands fa-whatsapp"></i>
             </button>
-            <button onclick="abrirModalTicket(${t.id})" class="p-1 text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200 transition-colors" title="Editar ticket">
+            <button onclick="abrirModalTicket('${t.id}')" class="p-1 text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200 transition-colors" title="Editar ticket">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button onclick="eliminarTicket(${t.id})" class="p-1 text-red-500 hover:text-red-700 transition-colors" title="Eliminar ticket">
+            <button onclick="eliminarTicket('${t.id}')" class="p-1 text-red-500 hover:text-red-700 transition-colors" title="Eliminar ticket">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </td>
@@ -725,10 +814,10 @@
             <button onclick="compartirWhatsApp('${t.folio}', '${t.responsable}', '${t.falla.replace(/'/g, "\\'")}', '${t.estatus}', '${prio}', '${(t.notas || '').replace(/'/g, "\\'")}')" class="py-1 px-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
               <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </button>
-            <button onclick="abrirModalTicket(${t.id})" class="py-1 px-2.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+            <button onclick="abrirModalTicket('${t.id}')" class="py-1 px-2.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
               <i class="fa-solid fa-pen-to-square"></i> Editar
             </button>
-            <button onclick="eliminarTicket(${t.id})" class="py-1 px-2.5 bg-red-500/10 text-red-600 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
+            <button onclick="eliminarTicket('${t.id}')" class="py-1 px-2.5 bg-red-500/10 text-red-600 rounded-lg font-semibold flex items-center gap-1 text-[11px]">
               <i class="fa-solid fa-trash-can"></i> Eliminar
             </button>
           </div>
@@ -744,6 +833,29 @@
       const filtroPrio = document.getElementById('filtroPrioridad').value;
       const fechaIni = document.getElementById('filtroFechaInicio').value;
       const fechaFin = document.getElementById('filtroFechaFin').value;
+
+      if (!navigator.onLine) {
+        const statusEl = document.getElementById('conexionStatus');
+        const cola = obtenerColaPendiente();
+        if (statusEl) {
+          statusEl.className = "inline-flex items-center gap-1 text-[11px] text-amber-500 font-bold";
+          statusEl.innerHTML = `<i class="fa-solid fa-wifi"></i> Modo Sin Conexión (${cola.length} pendientes)`;
+        }
+        let filtrados = ticketsData;
+        if (filtroResp) filtrados = filtrados.filter(t => t.responsable === filtroResp);
+        if (filtroEst) filtrados = filtrados.filter(t => t.estatus === filtroEst);
+        if (filtroPrio) filtrados = filtrados.filter(t => t.prioridad === filtroPrio);
+        if (fechaIni) filtrados = filtrados.filter(t => t.fecha >= fechaIni);
+        if (fechaFin) filtrados = filtrados.filter(t => t.fecha <= fechaFin);
+        if (textoBuscador) {
+          filtrados = filtrados.filter(t => 
+            (t.folio && t.folio.toLowerCase().includes(textoBuscador)) || 
+            (t.falla && t.falla.toLowerCase().includes(textoBuscador))
+          );
+        }
+        renderizarTickets(filtrados);
+        return;
+      }
 
       let query = supabaseClient.from('tickets').select('*').order('created_at', { ascending: false });
 
@@ -765,8 +877,9 @@
         return;
       }
 
-      if (statusEl) {
-        statusEl.className = "inline-flex items-center gap-1 text-[11px] text-emerald-500";
+      const cola = obtenerColaPendiente();
+      if (statusEl && cola.length === 0) {
+        statusEl.className = "inline-flex items-center gap-1 text-[11px] text-emerald-500 font-semibold";
         statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Base de Datos: En Línea`;
       }
 
@@ -776,7 +889,7 @@
       if (textoBuscador) {
         filtrados = ticketsData.filter(t => 
           (t.folio && t.folio.toLowerCase().includes(textoBuscador)) || 
-          (t.falla && t.falla.toLowerCase().includes(textoBussador || textoBuscador))
+          (t.falla && t.falla.toLowerCase().includes(textoBuscador))
         );
       }
 
